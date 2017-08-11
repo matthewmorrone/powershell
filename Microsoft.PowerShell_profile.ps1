@@ -1,4 +1,5 @@
 $Shell = $Host.UI.RawUI
+
 $Shell.ForegroundColor			= "White"
 $Shell.BackgroundColor			= "Black"
 $Shell.CursorSize				= 100
@@ -16,14 +17,17 @@ $value.Height = 50
 $Shell.WindowSize = $value
 
 
+
 Set-Location C:\Users\Matthew\Downloads
 $MaximumHistoryCount = 16KB-1
+
 
 Set-Alias -Name wget -Value 'C:\wget\wget.exe' -Option AllScope
 Set-Alias subl 'C:\Program Files\Sublime Text 3\sublime_text.exe'
 Set-Alias np 'C:\Windows\System32\notepad.exe'
 Set-Alias py 'python'
 Set-Alias brc 'brc64'
+
 
 Set-Alias rmsvg 'rm *.svg'
 
@@ -171,7 +175,6 @@ function Fix-Icons {
 			}
 			$index--
 		}
-
 	}
 }
 
@@ -198,7 +201,6 @@ function Fix-Icon-Dimensions {
 		}
 	}
 }
-
 
 function sublime
 {
@@ -227,6 +229,7 @@ function RemoveEmptyDirectories {
 }
 
 
+
 function Reload-Profile {
 	@(
 		$Profile.AllUsersAllHosts,
@@ -240,6 +243,9 @@ function Reload-Profile {
 		}
 	}
 }
+Set-Alias refresh 'Reload-Profile'
+Set-Alias reload  'Reload-Profile'
+
 
 
 
@@ -262,21 +268,17 @@ function PortView
 	} | Format-Table Protocol,LocalAddress,LocalPort,RemoteAddress,RemotePort,State -GroupBy @{Name='Process';Expression={$p=$_.Process;@{$True=$p.ProcessName; $False=$p.MainModule.FileName}[$p.MainModule -eq $Null] + ' PID: ' + $p.Id}} -AutoSize
 }
 
-function Encrypt
-{
+function Encrypt {
 	param([Parameter(ValueFromPipeline = $true)]$Text)
-	process
-	{
+	process {
 		$Text |
 		ConvertTo-SecureString -AsPlainText -Force |
 		ConvertFrom-SecureString
 	}
 }
-function Decrypt
-{
+function Decrypt {
 	param([Parameter(ValueFromPipeline = $true)]$Text)
-	process
-	{
+	process {
 		$SecureString = $Text |
 		ConvertTo-SecureString
 		$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureString)
@@ -284,26 +286,21 @@ function Decrypt
 	}
 }
 
-function Get-Event-Log
-{
+function Get-Event-Log {
 	Get-EventLog -List | Select-Object -ExpandProperty Entries -ErrorAction SilentlyContinue | Where-Object { $_.EntryType -eq 'Error' }
 }
-function Show-WebPage
-{
-	param
-	(
+function Show-WebPage {
+	param (
 		[Parameter(Mandatory = $true, HelpMessage = 'URL to open')]
 		$URL
 	)
 	Start-Process -FilePath iexplore.exe -ArgumentList $URL
 }
-function Get-System-Info
-{
+function Get-System-Info {
 	Get-WmiObject -Class Win32_Processor | Select-Object -Property Name, Number*
 }
 
-function Get-LoggedOnUserSession
-{
+function Get-LoggedOnUserSession {
 	param ($ComputerName, $Credential)
 	Get-WmiObject -Class Win32_LogonSession @PSBoundParameters |
 	ForEach-Object {
@@ -311,28 +308,24 @@ function Get-LoggedOnUserSession
 		Select-Object -ExpandProperty Caption
 	} | Sort-Object -Unique
 }
-function Get-LoggedOnUser
-{
+function Get-LoggedOnUser {
 	param ($ComputerName, $Credential)
 	Get-WmiObject -Class Win32_ComputerSystem @PSBoundParameters |
 	Select-Object -ExpandProperty UserName
 }
-function Get-IP
-{
+function Get-IP {
 	$ComputerName = ''
 	[System.Net.Dns]::GetHostAddresses($ComputerName).IPAddressToString
 }
 
-function Get-IPv4
-{
+function Get-IPv4 {
 	$ComputerName = ''
 	[System.Net.Dns]::GetHostAddresses($ComputerName) |
 	Where-Object {
 		$_.AddressFamily -eq 'InterNetwork'
 	} | Select-Object -ExpandProperty IPAddressToString
 }
-function Get-IPv6
-{
+function Get-IPv6 {
 	$ComputerName = ''
 	[System.Net.Dns]::GetHostAddresses($ComputerName) |
 	Where-Object {
@@ -341,48 +334,35 @@ function Get-IPv6
 }
 
 
-function Get-Links
-{
+function Get-Links {
 	param([string] $url='')
 	$page = Invoke-WebRequest -Uri $url
 	$page.Links
 }
-function Get-Raw
-{
+function Get-Raw {
 	param([string] $url='')
 	$page = Invoke-WebRequest -Uri $url
 	$page.RawContent
 }
 
-# -----------------------------------------------------------------------------
-# Gets all the metadata and returns a custom PSObject it is a bit slow right now, because I need to check all 266 fields for each file, and then create a custom object and emit it.
-# If used, use a variable to store the returned objects before attempting to do any sorting, filtering, and formatting of the output.
-# To do a recursive lookup of all metadata on all files, use this type of syntax to call the function:
-# Get-FileMetaData -folder (gci e:\music -Recurse -Directory).FullName
-# note: this MUST point to a folder, and not to a file.
-# -----------------------------------------------------------------------------
-Function Get-FileMetaData
-{
+
+Function Get-FileMetaData {
 	Param([string[]]$folder)
-	foreach($sFolder in $folder)
-	{
+	foreach($sFolder in $folder) {
 		$a = 0
 		$objShell = New-Object -ComObject Shell.Application
 		$objFolder = $objShell.namespace($sFolder)
 
-		foreach ($File in $objFolder.items())
-		{
+		foreach ($File in $objFolder.items()) {
 			$FileMetaData = New-Object PSOBJECT
-			for ($a ; $a	-le 266; $a++)
-			{
-				if($objFolder.getDetailsOf($File, $a))
-				{
-						$hash += @{$($objFolder.getDetailsOf($objFolder.items, $a))	= $($objFolder.getDetailsOf($File, $a)) }
-						$FileMetaData | Add-Member $hash
-						$hash.clear()
+			for ($a; $a -le 266; $a++) {
+				if($objFolder.getDetailsOf($File, $a)) {
+					$hash += @{$($objFolder.getDetailsOf($objFolder.items, $a))	= $($objFolder.getDetailsOf($File, $a))}
+					$FileMetaData | Add-Member $hash
+					$hash.clear()
 				} #end if
 			} #end for
-			$a=0
+			$a = 0
 			$FileMetaData
 		} #end foreach $file
 	} #end foreach $sfolder
